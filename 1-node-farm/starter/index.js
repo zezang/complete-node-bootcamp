@@ -31,26 +31,54 @@ const url  = require('url');
 // console.log('Will read file!')
 
 //-------------------Server---------------//
+const replaceTemplate = (template, obj) => {
+    let output = template.replace(/{%PRODUCTNAME%}/g, obj.productName);
+    output = output.replace(/{%IMAGE%}/g, obj.image);
+    output = output.replace(/{%PRICE%}/g, obj.price);
+    output = output.replace(/{%FROM%}/g, obj.from);
+    output = output.replace(/{%NUTRIENTS%}/g, obj.nutrients);
+    output = output.replace(/{%QUANTITY%}/g, obj.quantity);
+    output = output.replace(/{%ID%}/g, obj.id);
+    output = output.replace(/{%DESCRIPTION%}/g, obj.description);
+
+    if (!obj.organic) output = output.replace(/{%NOT_ORGANIC%}/g, 'not-organic');
+    return output;
+}
+
+const templateOverview = fs.readFileSync(`${__dirname}/templates/template-overview.html`, 'utf-8');
+const templateProduct = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8');
+const templateCard = fs.readFileSync(`${__dirname}/templates/template-card.html`, 'utf-8');
+
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
 const dataObj = JSON.parse(data);
 
 const server = http.createServer((req, res) => {
-    if (req.url === '/' || req.url === '/overview') {
-        res.end('This is the OVERVIEW');
-    } 
+    const {query, pathname} = url.parse(req.url, true);
     
-    else if (req.url === '/product') {
-        res.end('This is the PRODUCT');
+    //Overview page
+    if (pathname === '/' || pathname === '/overview') {
+        res.writeHead(200, {'Content-type': 'text/html'});
+
+        const cardsHtml = dataObj.map(el => replaceTemplate(templateCard, el)).join('');
+        const output = templateOverview.replace('{%PRODUCT_CARDS%', cardsHtml);
+        res.end(output);
     } 
-    
-    else if (req.url === '/api') {
+    //product pate
+    else if (pathname === '/product') {
+        const product = dataObj[query.id];
+        const output = replaceTemplate(templateProduct, product)
+        res.writeHead(200, {'Content-type': 'text/html'});
+        res.end(output);
+    } 
+    //API
+    else if (pathname === '/api') {
         fs.readFile(`${__dirname}/dev-data/data.json`, 'utf-8', (err) => {
             if (err) return console.log(err.message);
              res.writeHead(200, {'Content-type': 'application/json'})
              res.end(data);
         });
     } 
-    
+    //Not found
     else {
         res.writeHead(404, {
             'Content-type': 'text/html',
