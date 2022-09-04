@@ -27,6 +27,12 @@ exports.getAllUsers = catchAsync (async (req, res, next) => {
     });
 })
 
+exports.getMe = catchAsync ( async (req, res, next) => {
+    req.params.id = req.user.id;
+
+    return next();
+});
+
 exports.updateMe = catchAsync( async (req, res, next) => {
     //create error if user POSTs password data
     if (req.body.password || req.body.passwordConfirm) return next(new AppError('Can not update password with this route'))
