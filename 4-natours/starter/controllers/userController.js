@@ -54,19 +54,13 @@ exports.deleteMe = catchAsync ( async (req, res, next) => {
     })
 });
 
-exports.getUser = (req, res) => {
-    res.status(500).json({
-        status: 'error',
-        results: null,
-        message: 'Route not yet defined'
-    });
-}
+exports.getUser = factory.getOne(User);
 
 exports.createUser = (req, res) => {
     res.status(500).json({
         status: 'error',
         results: null,
-        message: 'Route not yet defined'
+        message: 'Route not yet defined. Please use signup instead'
     });
 }
 
