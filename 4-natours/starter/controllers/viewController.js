@@ -24,9 +24,11 @@ exports.getTour = catchAsync(async (req, res, next) => {
     // Build template
     // Render template
 
-    res.status(200).render('tour', {
-        title: tour.name,
-        tour
+    res.status(200)
+        .header('Cross-Origin-Resource-Policy', 'cross-origin')
+        .render('tour', {
+            title: tour.name,
+            tour
     });
 });
 
