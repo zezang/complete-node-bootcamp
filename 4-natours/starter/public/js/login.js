@@ -10,12 +10,17 @@ const login = async (email, password) => {
         body: JSON.stringify({
             email : email,
             password: password
-        })
-        
+        })  
     });
-    console.log(res)
+        console.log(res)
+        if (res.status === 200) {
+            alert('Loggin in successfully');
+            window.setTimeout(() => {
+                location.assign('/')
+            }, 1500)
+        }
     } catch (err) {
-        console.log(err);
+        alert(err.message);
     }  
 }
 

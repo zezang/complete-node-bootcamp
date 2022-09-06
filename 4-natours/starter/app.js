@@ -15,7 +15,7 @@ const reviewRouter = require('./routes/reviewRoutes');
 const viewRouter = require('./routes/viewRoutes');
 const cookieParser = require('cookie-parser');
 
-app.use(cors());
+// app.use(cors());
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 //MIDDLEWARES
