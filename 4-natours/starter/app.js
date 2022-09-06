@@ -13,7 +13,7 @@ const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const viewRouter = require('./routes/viewRoutes');
-const cors = require('cors')
+const cookieParser = require('cookie-parser');
 
 app.use(cors());
 app.set('view engine', 'pug');
@@ -35,6 +35,7 @@ if (process.env.NODE_ENV === 'development'){
 }
 
 app.use(express.json({ limit: '10kb' }));
+app.use(cookieParser());
 app.use(mongoSanitize());
 app.use(xss());
 app.use(hpp({
