@@ -23,34 +23,52 @@ const handleCastErrorDB = err => {
 
   const handleJWTExpiredError = (err) => new AppError('Expired token. Please log in again', 401);
   
-  const sendErrorDev = (err, res) => {
-    res.status(err.statusCode).json({
-      status: err.status,
-      error: err,
-      message: err.message,
-      stack: err.stack
-    });
-  };
-  
-  const sendErrorProd = (err, res) => {
-    // Operational, trusted error: send message to client
-    if (err.isOperational) {
+  const sendErrorDev = (err, req, res) => {
+    if (req.originalUrl.startsWith('/api')) {
       res.status(err.statusCode).json({
         status: err.status,
-        message: err.message
-      });
-  
-      // Programming or other unknown error: don't leak error details
-    } else {
-      // 1) Log error
-      console.error('ERROR: ', err);
-  
-      // 2) Send generic message
-      res.status(500).json({
-        status: 'error',
-        message: 'Something went very wrong!'
+        error: err,
+        message: err.message,
+        stack: err.stack
       });
     }
+    else {
+      console.log(err)
+      res.status(err.statusCode).render('error', {
+        title: 'Uh-oh something went wrong',
+        msg: 'Please try again'
+      })
+    }
+  };
+  
+  const sendErrorProd = (err, req, res) => {
+    // Operational, trusted error: send message to client
+    if (req.originalUrl.startsWith('/api')) {
+      if (err.isOperational) {
+        return res.status(err.statusCode).json({
+          status: err.status,
+          message: err.message
+        });
+    
+        // Programming or other unknown error: don't leak error details
+      } else {
+        // 1) Log error
+        console.error('ERROR: ', err);
+    
+        // 2) Send generic message
+        res.status(500).json({
+          status: 'error',
+          message: 'Something went very wrong!'
+        });
+      }
+    }
+    else {
+      return res.status(err.statusCode).render('error', {
+        title: 'Something went wrong',
+        msg: 'Resource could not be found'
+      })
+    }
+    
   };
   
   module.exports = (err, req, res, next) => {
@@ -60,7 +78,7 @@ const handleCastErrorDB = err => {
     err.status = err.status || 'error';
   
     if (process.env.NODE_ENV === 'development') {
-      sendErrorDev(err, res);
+      sendErrorDev(err, req, res);
     } else if (process.env.NODE_ENV === 'production') {
       let error = { ...err };
       if (error.name === 'CastError') error = handleCastErrorDB(error);
@@ -68,6 +86,6 @@ const handleCastErrorDB = err => {
       if (error.name === 'ValidationError') error = handleValidationErrorDB(error);
       if (error.name === 'JsonWebTokenError') error = handeJWTError(error);
       if (error.name === 'TokenExpiredError' ) error = handleJWTExpireError(error);
-      sendErrorProd(error, res);
+      sendErrorProd(error, req, res);
     }
   };

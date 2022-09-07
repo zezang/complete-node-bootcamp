@@ -87,6 +87,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
     //grant access to protected route
     req.user = user;
+    res.locals.user = user;
     return next();
 });
 
@@ -169,20 +170,35 @@ exports.updatePassword = catchAsync( async (req, res, next) => {
     createSendToken(user, 200, res);
 });
 
-exports.isLoggedIn = catchAsync(async (req, res, next) => {
+exports.isLoggedIn = async (req, res, next) => {
     //get token and check if it's there
     if (req.cookies.jwt) {
-        const decoded = await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_SECRET);
+        try {
+            const decoded = await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_SECRET);
        
-        //check if user still exists
-        const user = await User.findById(decoded.id);
+            //check if user still exists
+            const user = await User.findById(decoded.id);
 
-        //check if user changed passwords after the JWT was issued
-        if (user.changedPasswordAfter(decoded.iat)) return next();
+            //check if user changed passwords after the JWT was issued
+            if (user.changedPasswordAfter(decoded.iat)) return next();
 
-        //grant access to protected route
-        res.locals.user = user
-        return next();
+            //grant access to protected route
+            res.locals.user = user;
+            return next();
+        } catch (err) {
+            return next()
+        }
     }
     return next();
-});
+};
+
+exports.logout = (req, res) => {
+    res.cookie('jwt', 'loggedout', {
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    })
+    res.status(200).json({
+        status: 'success'
+    })
+};
+

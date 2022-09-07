@@ -37,13 +37,15 @@ exports.updateMe = catchAsync( async (req, res, next) => {
     //create error if user POSTs password data
     if (req.body.password || req.body.passwordConfirm) return next(new AppError('Can not update password with this route'))
     //update user document
+  
     const filteredBody = filterObj(req.body, 'name', 'email');
+    console.log(filteredBody)
     const updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, {
         new: true,
         runValidators: true
     });
     if (!updatedUser) return next(new AppError('User not found'));
-    console.log(updatedUser);
+
     res.status(200).json({
         status: 'success'
     })
