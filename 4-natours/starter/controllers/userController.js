@@ -3,7 +3,38 @@ const AppError = require('./../utils/appError');
 const APIFeatures = require('./../utils/apiFeatures');
 const catchAsync = require('./../utils/catchAsync');
 const factory = require('./handlerFactory');
+const multer = require('multer');
 
+const multerStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'public/img/users');
+    },
+    filename: (req, file, cb) => {
+        const ext = file.mimetype.split('/')[1];
+        cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+    }
+});
+
+const multerFilter = (req, file, cb) =>{
+    if (file.mimetype.startsWith('image')) {
+        cb(null, true)
+    } else {
+        cb(new AppError('Not an image!', 400), false)
+    }
+};
+
+const upload = multer({ 
+    storage: multerStorage,
+    fileFilter: multerFilter 
+});
+
+exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = (req, res, next) => {
+    if (!req.file) return next();
+
+    
+};
 
 const filterObj = (obj, ...allowedFields) => {
     const filtered =  Object.keys(obj)
@@ -39,7 +70,9 @@ exports.updateMe = catchAsync( async (req, res, next) => {
     //update user document
   
     const filteredBody = filterObj(req.body, 'name', 'email');
-    console.log(filteredBody)
+   
+    if (req.file) filteredBody.photo = req.file.filename;
+
     const updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, {
         new: true,
         runValidators: true
@@ -47,7 +80,8 @@ exports.updateMe = catchAsync( async (req, res, next) => {
     if (!updatedUser) return next(new AppError('User not found'));
 
     res.status(200).json({
-        status: 'success'
+        status: 'success',
+        updatedUser
     })
 });
 
