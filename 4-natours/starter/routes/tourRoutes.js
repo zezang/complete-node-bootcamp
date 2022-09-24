@@ -32,13 +32,15 @@ router.route('/')
     tourController.createTour);
 
 router.route('/:id')
-.get(tourController.getTour)
-.patch(authController.protect,
-    authController.restrictTo('admin', 'lead-guide'),
-    tourController.updateTour)
-.delete(authController.protect, authController.restrictTo('admin', 'lead-guide'), tourController.deleteTour, (req, res) => {
-    res.status(200).json('Tour deleted!')
-});
+    .get(tourController.getTour)
+    .patch(authController.protect,
+        authController.restrictTo('admin', 'lead-guide'),
+        tourController.uploadTourImages,
+        tourController.resizeTourImages,
+        tourController.updateTour)
+    .delete(authController.protect, authController.restrictTo('admin', 'lead-guide'), tourController.deleteTour, (req, res) => {
+        res.status(200).json('Tour deleted!')
+    });
 
 
 module.exports = router;
