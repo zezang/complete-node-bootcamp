@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const pug = require('pug');
+const htmlToText = require('html-to-text');
 
 module.exports = class Email {
     constructor(user, url) {
@@ -9,9 +10,9 @@ module.exports = class Email {
         this.from = `Oliver Zhang <${process.env.EMAIL_FROM}>`
     };
 
-    createTransport = () => {
+    newTransport = () => {
         if (process.env.NODE_ENV === 'production') {
-            
+            return 1;
         };
 
         return nodemailer.createTransport({
@@ -24,35 +25,29 @@ module.exports = class Email {
         });
     };
 
-    send = (template, subject) => {
-        const html = pug.renderFile(`${__dirname}/../views/emails/${template}.pug`)
+    send = async (template, subject) => {
+        const html = pug.renderFile(`${__dirname}/../views/email/${template}.pug`)
 
         const mailOptions = {
             from: this.from,
             to: this.to,
             subject,
             html,
-            text: options.message,
+            text: htmlToText.fromString(html),
         };
+
+        this.newTransport();
+        await this.newTransport().sendMail(mailOptions);
     };
 
-    sendWelcome = () => {
-        this.send('welcome', 'Welcome to Natours!')
+    sendWelcome = async () => {
+        await this.send('welcome', 'Welcome to Natours!')
+    };
+
+    sendPasswordReset = async () => {
+        await this.send('passwordReset', 'Your password reset token')
     };
 };
 
-const sendEmail = async (options) => {
 
-    //DEFINE email options
-    const mailOptions = {
-        from: 'Oliver Zhang <hello@natours.io>',
-        to: options.email,
-        subject: options.subject,
-        text: options.message,
-    }
-
-    //send the email
-    await transporter.sendMail(mailOptions);
-}
-
-module.exports = sendEmail;
+// module.exports = Email;

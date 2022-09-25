@@ -21,7 +21,7 @@ mongoose.connect(DB, {
     useUnifiedTopology: true,
 }).then(connection => {
     console.log('DB connection successful!');
-})
+}).catch(err => console.log(err))
 
 
 const PORT = process.env.PORT || 3000;

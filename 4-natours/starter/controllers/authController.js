@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 dotenv.config({path: './config.env'});
 const AppError = require('./../utils/appError');
-const sendEmail = require('./../utils/email');
+const Email = require('./../utils/email');
 const crypto = require('crypto');
 
 
@@ -49,6 +49,9 @@ exports.signup = catchAsync(async (req, res, next) => {
         role: req.body.role,
         active: req.body.active
     });
+
+    const url = `${req.protocol}://${req.get('host')}/me}`;
+    await new Email(newUser, url).sendWelcome();
 
     createSendToken(newUser, 201, res);
 });
@@ -111,25 +114,25 @@ exports.forgotPassword = catchAsync (async (req, res, next) => {
     const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
     
     const message = `Forgot password? Submit a PATCH request with your new password to ${resetURL}.\nIf you didn't forget your password, please ignore this email`;
-    try {
-        await sendEmail({
-            email: user.email,
-            subject: 'Password reset token (valid for 10 min)',
-            message
-        });
-
-        res.status(200).json({
-            status: 'success',
-            message: 'Token sent to email'
-        })
-    } catch (err) {
-        console.log(err)
-        user.passwordResetToken = undefined;
-        user.passwordResetExpires = undefined;
-        await user.save({validateBeforeSave: false});
+    // try {
+    //     // await sendEmail({
+    //     //     email: user.email,
+    //     //     subject: 'Password reset token (valid for 10 min)',
+    //     //     message
+    //     });
+    await new Email(user, resetURL).sendPasswordReset();
+    //     res.status(200).json({
+    //         status: 'success',
+    //         message: 'Token sent to email'
+    //     })
+    // } catch (err) {
+    //     console.log(err)
+    //     user.passwordResetToken = undefined;
+    //     user.passwordResetExpires = undefined;
+    //     await user.save({validateBeforeSave: false});
 
         return next(new AppError('Error sending reset email', 500))
-    }
+    // }
     
 });
 
